@@ -1,0 +1,41 @@
+---
+- name: Remove Git & python3-passlib, delete tva_projects user, remove directories and Git configurations
+  hosts: all
+  become: true
+  vars:
+    tva_user: tva_projects
+    git_user_name: tva_projects
+    git_user_email: projects@tvanywhereafrica.com
+    tva_home_dirs:
+      - ansible_workspace
+      - .ssh
+    git_config_file:
+      - .gitconfig
+
+  tasks:
+    - name: Remove Git, python3-passlib
+      ansible.builtin.apt:
+        name: git, python3-passlib
+        state: absent
+        update_cache: yes
+
+    - name: Delete tva_user user & home directory
+      ansible.builtin.user:
+        name: "{{ tva_user }}"
+        shell: /bin/bash
+        state: absent
+
+    - name: Remove directories in user's home
+      ansible.builtin.file:
+        path: "/home/{{ tva_user }}/{{ item }}"
+        state: absent
+        owner: "{{ tva_user }}"
+        group: "{{ tva_user }}"
+        mode: 0755
+      loop: "{{ tva_home_dirs }}"
+
+    - name: Remove Git config files
+      ansible.builtin.file: 
+        path: "/home/{{ tva_user }}/"
+        state: absent
+      loop: "{{ git_config_file }}"

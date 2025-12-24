@@ -1,0 +1,66 @@
+---
+- name: Install Git, create tva_projects user, set up directories and configure Git
+  hosts: all
+  become: true
+  vars:
+    tva_user: tva_projects
+    tva_user_password: "tvaprojects"
+    git_user_name: tva_projects
+    git_user_email: projects@tvanywhereafrica.com
+    tva_home_dirs:
+      - ansible_workplace
+      - .ssh
+
+  tasks:
+    - name: Install Git, Python3-passlib
+      ansible.builtin.apt:
+        name: git, python3-passlib
+        state: present
+        update_cache: yes
+    
+    - name: Create tva_projects user with home directory
+      ansible.builtin.user:
+        name: "{{ tva_user }}"
+        shell: /bin/bash
+        create_home: yes
+        password: "{{ tva_user_password | password_hash('sha512') }}"
+        update_password: on_create  
+        state: present
+
+    - name: Create additional directories in user's home
+      ansible.builtin.file:
+        path: "/home/{{ tva_user }}/{{ item }}"
+        state: directory
+        owner: "{{ tva_user }}"
+        group: "{{ tva_user }}"
+        mode: 0755
+      loop: "{{ tva_home_dirs }}"
+    
+    - name: Ensure .gitconfig exists for the tva user (to avoid lock issues)
+      ansible.builtin.file:
+        path: "/home/{{ tva_user }}/.gitconfig"
+        state: touch
+        owner: "{{ tva_user }}"
+        group: "{{ tva_user }}"
+        mode: '0644'
+
+    - name: Set global Git user name for tva_user
+      community.general.git_config:
+        name: user.name
+        scope: file
+        file: "/home/{{ tva_user }}/.gitconfig"
+        value: "{{ git_user_name }}"
+
+    - name: Set global Git user email for tva_user
+      community.general.git_config:
+        name: user.email
+        scope: file
+        file: "/home/{{ tva_user }}/.gitconfig"
+        value: "{{ git_user_email }}"
+
+    - name: Enable color output in Git
+      community.general.git_config:
+        name: color.ui
+        scope: file
+        file: "/home/{{ tva_user }}/.gitconfig"
+        value: auto
