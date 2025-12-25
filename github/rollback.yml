@@ -5,7 +5,7 @@
   vars:
     tva_user: tva_projects
     git_user_name: tva_projects
-    git_user_email: projects@tvanywhereafrica.com
+    git_user_email: projects@example.com
     tva_home_dirs:
       - ansible_workspace
       - .ssh

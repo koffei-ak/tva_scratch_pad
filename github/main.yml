@@ -4,9 +4,9 @@
   become: true
   vars:
     tva_user: tva_projects
-    tva_user_password: "tvaprojects"
+    tva_user_password: "tvaprojectspassword"
     git_user_name: tva_projects
-    git_user_email: projects@tvanywhereafrica.com
+    git_user_email: projects@example.com
     tva_home_dirs:
       - ansible_workplace
       - .ssh
