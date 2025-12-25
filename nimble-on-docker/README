@@ -1,0 +1,5 @@
+Ansible Playbook to deploy Nimble Streamer with SRT module in Docker 
+on Ubuntu 22.04 (Jammy with persistent data storage for configuration and logs.
+
+Usage:          
+ansible-playbook nimble-srt-docker.yml --extra-vars "wmspanel_account=your@email wmspanel_pass=yourpass wmspanel_server_name=my-nimble-server"
