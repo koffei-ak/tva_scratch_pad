@@ -1,0 +1,173 @@
+# Ansible Playbook to deploy Nimble Streamer with SRT module in Docker on Ubuntu 22.04 (Jammy)
+# with persistent data storage for configuration and logs.
+# Usage:          
+# ansible-playbook nimble-srt-docker.yml --extra-vars "wmspanel_account=your@email wmspanel_pass=yourpass wmspanel_server_name=my-nimble-server"
+---
+- name: Deploy Nimble Streamer with SRT module in Docker on Ubuntu 22.04 (Jammy) with persistent data
+  hosts: all
+  become: yes
+  vars:
+    wmspanel_account: "{{ wmspanel_account }}"  # Pass via --extra-vars
+    wmspanel_pass: "{{ wmspanel_pass }}"
+    wmspanel_server_name: "{{ wmspanel_server_name | default('docker-nimble-srt') }}"
+    docker_build_dir: /tmp/nimble-docker-build
+    nimble_config_dir: /opt/nimble/config
+    nimble_logs_dir: /opt/nimble/logs
+    image_name: nimble-srt
+    image_tag: latest
+    dockerfile_url: https://raw.githubusercontent.com/Softvelum/nimble-docker/master/macos-srt/Dockerfile
+    #srt_port: 10000  # Common default for SRT listener; adjust if needed
+
+  tasks:
+    - name: Uninstall old Docker packages if present (to avoid conflicts)
+      apt:
+        name:
+          - docker
+          - docker-engine
+          - docker.io
+          - containerd
+          - runc
+      #  state: absent
+
+    - name: Install prerequisites for Docker repository
+      apt:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+        update_cache: yes
+
+    - name: Add Docker GPG key
+      shell: |
+        sudo install -m 0755 -d /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+        sudo chmod a+r /etc/apt/keyrings/docker.gpg
+      args:
+        creates: /etc/apt/keyrings/docker.gpg
+
+    - name: Add Docker repository
+      copy:
+        content: |
+          deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+        dest: /etc/apt/sources.list.d/docker.list
+      notify: Update apt cache
+
+    - name: Install Docker Engine and Ansible Docker module dependencies
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
+
+    - name: Ensure Python Docker package is installed for Ansible modules
+      pip:
+        name: docker
+        state: present
+
+    - name: Create temporary directory for Dockerfile
+      file:
+        path: "{{ docker_build_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Download official Nimble Streamer SRT Dockerfile
+      get_url:
+        url: "{{ dockerfile_url }}"
+        dest: "{{ docker_build_dir }}/Dockerfile"
+        mode: '0644'
+
+    - name: Build Nimble Streamer SRT Docker image
+      community.docker.docker_image:
+        name: "{{ image_name }}:{{ image_tag }}"
+        build:
+          path: "{{ docker_build_dir }}"
+          args:
+            WMSPANEL_ACCOUNT: "{{ wmspanel_account }}"
+            WMSPANEL_PASS: "{{ wmspanel_pass }}"
+            WMSPANEL_SERVER_NAME: "{{ wmspanel_server_name }}"
+        source: build
+        state: present
+        force_source: yes
+
+    - name: Clean up temporary build directory
+      file:
+        path: "{{ docker_build_dir }}"
+        state: absent
+
+    - name: Create host directories for persistent data
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      loop:
+        - "{{ nimble_config_dir }}"
+        - "{{ nimble_logs_dir }}"
+
+    - name: Run Nimble Streamer SRT container with persistent volumes
+      community.docker.docker_container:
+        name: nimble-srt
+        image: "{{ image_name }}:{{ image_tag }}"
+        state: started
+        restart_policy: unless-stopped
+        ports:
+          - "8081:8081"              # Web UI / HTTP-based streaming
+          - "1935:1935"              # RTMP
+          - "10100:10100/udp"  # SRT1 ports
+          - "10101:10101/udp"  # SRT2 ports
+          - "10102:10102/udp"  # SRT3 ports
+          - "10103:10103/udp"  # SRT4 ports
+          - "10104:10104/udp"  # SRT5 ports
+          - "10105:10105/udp"  # SRT6 ports
+          - "10106:10106/udp"  # SRT7 ports
+          - "10107:10107/udp"  # SRT8 ports
+          - "10108:10108/udp"  # SRT9 ports
+          - "10109:10109/udp"  # SRT10 ports
+          - "10110:10110/udp"  # SRT11 ports
+          - "10111:10111/udp"  # SRT12 ports
+          - "10112:10112/udp"  # SRT13 ports
+          - "10113:10113/udp"  # SRT14 ports
+          - "10114:10114/udp"  # SRT15 ports
+          - "10115:10115/udp"  # SRT16 ports
+          - "10116:10116/udp"  # SRT17 ports
+          - "10117:10117/udp"  # SRT18 ports
+          - "10118:10118/udp"  # SRT19 ports
+          - "10119:10119/udp"  # SRT20 ports
+          - "10120:10120/udp"  # SRT21 ports
+          - "10121:10121/udp"  # SRT22 ports
+          - "10122:10122/udp"  # SRT23 ports
+          - "10123:10123/udp"  # SRT24 ports
+          - "10124:10124/udp"  # SRT25 ports
+          - "10125:10125/udp"  # SRT26 ports
+          - "10126:10126/udp"  # SRT27 ports
+          - "10127:10127/udp"  # SRT28 ports
+          - "10128:10128/udp"  # SRT29 ports
+          - "10129:10129/udp"  # SRT30 ports
+          - "10130:10130/udp"  # SRT31 ports
+          - "10131:10131/udp"  # SRT32 ports
+          - "10132:10132/udp"  # SRT33 ports
+          - "10133:10133/udp"  # SRT34 ports
+          - "10134:10134/udp"  # SRT35 ports
+          - "10135:10135/udp"  # SRT36 ports
+          - "10136:10136/udp"  # SRT37 ports
+          - "10137:10137/udp"  # SRT38 ports
+          - "10138:10138/udp"  # SRT39 ports
+          - "10139:10139/udp"  # SRT40 ports
+        volumes:
+          - "{{ nimble_config_dir }}:/etc/nimble"   # Persistent configuration
+          - "{{ nimble_logs_dir }}:/var/log/nimble" # Persistent logs
+        capabilities:
+          - NET_ADMIN
+          - NET_RAW
+
+  handlers:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
